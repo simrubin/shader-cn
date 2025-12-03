@@ -108,7 +108,7 @@ const DockIconButton = React.forwardRef<HTMLButtonElement, DockIconButtonProps>(
             onClick={onClick}
             className={cn(
               "relative group p-3 rounded-2xl",
-              "hover:bg-background/90 transition-colors",
+              "hover:bg-primary/20 transition-colors",
               isActive && "bg-accent",
               className
             )}
@@ -157,7 +157,7 @@ function AccentColorPicker({
             onClick={onToggle}
             className={cn(
               "relative group p-3 rounded-2xl",
-              "hover:bg-background/90 transition-colors",
+              "hover:bg-primary/20 transition-colors",
               isOpen && "bg-accent"
             )}
           >
@@ -270,12 +270,12 @@ const Dock = React.forwardRef<HTMLDivElement, DockProps>(
           />
 
           {/* Separator */}
-          <div className="w-px h-6 bg-border mx-1" />
+          <div className="w-px h-6 mx-1" />
 
           {/* Bookmarks */}
           <DockIconButton
             icon={Bookmark}
-            label={showBookmarksOnly ? "Show all" : "Show bookmarks"}
+            label={showBookmarksOnly ? "All" : "Bookmarks"}
             onClick={onToggleBookmarks}
             isActive={showBookmarksOnly}
             badge={bookmarkCount}
@@ -283,7 +283,7 @@ const Dock = React.forwardRef<HTMLDivElement, DockProps>(
           />
 
           {/* Separator */}
-          <div className="w-px h-6 bg-border mx-1" />
+          <div className="w-px h-6  mx-1" />
 
           {/* Accent Color Picker */}
           <div data-dock-color-picker>

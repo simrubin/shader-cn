@@ -25,7 +25,7 @@ export function SearchButton({
         "disabled:pointer-events-none disabled:opacity-50",
         " hover:bg-secondary hover:text-accent-foreground",
         "h-9 pl-4 pr-2 py-2 w-full justify-start rounded-xl",
-        "bg-secondary/80 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-md",
+        "bg-secondary/80 text-sm font-medium text-muted-foreground shadow-none backdrop-blur-md",
         "md:w-40 lg:w-56 xl:w-64",
         className
       )}

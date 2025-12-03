@@ -360,7 +360,7 @@ export function PresetGallery({
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="bg-secondary/80 backdrop-blur-md shadow-sm hover:bg-secondary"
+                  className="bg-secondary/80 backdrop-blur-md shadow-none hover:bg-secondary"
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                   aria-label="Toggle theme"
                 >
@@ -410,7 +410,7 @@ export function PresetGallery({
                     onClick={() => onSelect(preset)}
                   >
                     <div
-                      className="rounded-[40px] hover:scale-[1.02] transition-all duration-300 overflow-hidden group cursor-pointer relative shadow-xl hover:shadow-2xl"
+                      className="rounded-[40px] hover:scale-[1.02] transition-all duration-300 overflow-hidden group cursor-pointer relative shadow-md hover:shadow-lg"
                       style={{ width: CARD_WIDTH, height: CARD_HEIGHT }}
                     >
                       {/* Image fills entire card */}

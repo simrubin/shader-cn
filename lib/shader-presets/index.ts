@@ -6,12 +6,11 @@ export { simplexFlow } from "./simplex-flow";
 export { rippleEffect } from "./ripple-effect";
 export { auroraBorealis } from "./aurora-borealis";
 export { lavaLamp } from "./lava-lamp";
+export { meshGradient } from "./mesh-gradient";
 
 // 3D shaders
-
 export { tutorialSphere } from "./tutorial-sphere";
 export { tunnel } from "./tunnel";
-
 export { starfield } from "./starfield";
 export { neonGrid } from "./neon-grid";
 export { volumetricClouds } from "./volumetric-clouds";
@@ -31,11 +30,20 @@ export { sparkle } from "./sparkle";
 export { dithering } from "./dithering";
 export { imageDithering } from "./image-dithering";
 
+// React component shaders (from @paper-design/shaders-react)
+export {
+  MeshGradient,
+  LayeredMeshGradient,
+  type MeshGradientProps,
+  type LayeredMeshGradientProps,
+} from "./components/mesh-gradient";
+
 // Combined array export
 import { simplexFlow } from "./simplex-flow";
 import { rippleEffect } from "./ripple-effect";
 import { auroraBorealis } from "./aurora-borealis";
 import { lavaLamp } from "./lava-lamp";
+import { meshGradient } from "./mesh-gradient";
 import { tutorialSphere } from "./tutorial-sphere";
 import { tunnel } from "./tunnel";
 import { starfield } from "./starfield";
@@ -57,6 +65,7 @@ export const allShaderPresets = [
   { ...rippleEffect, image: "/shader-imgs/ripple-effect.png" },
   { ...auroraBorealis, image: "/shader-imgs/aurora-borealis.png" },
   { ...lavaLamp, image: "/shader-imgs/lava-lamp.png" },
+  { ...meshGradient, image: "/shader-imgs/mesh-gradient.png" },
 
   // 3D
   { ...tutorialSphere, image: "/shader-imgs/tutorial-sphere.png" },

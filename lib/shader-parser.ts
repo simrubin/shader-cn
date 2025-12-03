@@ -1,5 +1,5 @@
 export interface ShaderUniform {
-  type: "float" | "vec2" | "vec3" | "vec4" | "bool" | "int"
+  type: "float" | "vec2" | "vec3" | "vec4" | "bool" | "int" | "sampler2D"
   defaultValue: any
   min: number
   max: number
@@ -11,7 +11,7 @@ export function parseShaderUniforms(shaderCode: string): Record<string, ShaderUn
   const uniforms: Record<string, ShaderUniform> = {}
 
   // Match uniform declarations with optional comments
-  const uniformRegex = /uniform\s+(float|vec2|vec3|vec4|bool|int)\s+(\w+)\s*;(?:\s*\/\/\s*(.*))?/g
+  const uniformRegex = /uniform\s+(float|vec2|vec3|vec4|bool|int|sampler2D)\s+(\w+)\s*;(?:\s*\/\/\s*(.*))?/g
 
   let match
   while ((match = uniformRegex.exec(shaderCode)) !== null) {
@@ -19,6 +19,11 @@ export function parseShaderUniforms(shaderCode: string): Record<string, ShaderUn
 
     // Skip built-in uniforms
     if (name.startsWith("u_time") || name.startsWith("u_resolution") || name.startsWith("u_mouse")) {
+      continue
+    }
+    
+    // Skip resolution uniforms for textures (handled automatically)
+    if (name.endsWith("Resolution")) {
       continue
     }
 
@@ -38,6 +43,11 @@ export function parseShaderUniforms(shaderCode: string): Record<string, ShaderUn
 }
 
 function getDefaultValue(type: string, comment?: string): any {
+  // sampler2D always returns texture object
+  if (type === "sampler2D") {
+    return { type: "texture", image: null, width: 0, height: 0 }
+  }
+  
   // Try to parse default from comment
   if (comment) {
     const defaultMatch = comment.match(/default[:\s]+([0-9.,[\]\s]+)/i)
@@ -70,6 +80,8 @@ function getTypeDefault(type: string): any {
       return [0.5, 0.5, 0.5, 1.0]
     case "bool":
       return false
+    case "sampler2D":
+      return { type: "texture", image: null, width: 0, height: 0 }
     default:
       return 0
   }

@@ -8,7 +8,7 @@ A Next.js app for designing and previewing shader-based animations with an inter
 
 ## Live site
 
-(https://shader-cn.vercel.app/)
+https://shader-cn.vercel.app/
 
 ## Getting started
 

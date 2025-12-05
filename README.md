@@ -4,11 +4,11 @@ A Next.js app for designing and previewing shader-based animations with an inter
 
 - Live preview with adjustable uniforms and presets
 - Shader code editor with examples and gallery
-- Built on React, Three.js, and `@paper-design/shaders-react`
+- Built on React and Three.js
 
 ## Live site
 
-https://vercel.com/simeon-rubins-projects/v0-shader-animation-builder
+(https://shader-cn.vercel.app/)
 
 ## Getting started
 

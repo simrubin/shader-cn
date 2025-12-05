@@ -383,7 +383,7 @@ export function PresetGallery({
 
         {/* Infinite Canvas or Grid View */}
         {isGridView ? (
-          <div className="w-full h-full overflow-y-auto pt-24 pb-24 px-8">
+          <div className="w-full h-full overflow-y-auto py-48 px-8">
             {filteredPresets.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
                 <Bookmark className="size-12 opacity-50" />

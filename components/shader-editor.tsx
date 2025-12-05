@@ -1,13 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ShaderCanvas } from "./shader-canvas";
+import { ShaderCanvas, ShaderCanvasRef } from "./shader-canvas";
 import { shaderPresets } from "@/lib/shader-presets";
 import { parseShaderUniforms, type ShaderUniform } from "@/lib/shader-parser";
-import { FloatingControls } from "./floating-controls";
+import { ControlPanel } from "./control-panel";
+import { CodePanel } from "./code-panel";
 import { R3FCanvas } from "./r3f-canvas";
 import { R3FFullscreenCanvas } from "./r3f-fullscreen-canvas";
+import { ChevronLeft } from "lucide-react";
+
+// GIF encoder for recording
+declare global {
+  interface Window {
+    GIF?: any;
+  }
+}
 
 export function ShaderEditor() {
   const router = useRouter();
@@ -20,22 +29,45 @@ export function ShaderEditor() {
   const [vertexShaderCode, setVertexShaderCode] = useState<string | undefined>(
     initialPreset.vertexShader
   );
-  const [renderMode, setRenderMode] = useState<"canvas" | "mesh" | "fullscreen">(
-    initialPreset.mode || "canvas"
+  const [renderMode, setRenderMode] = useState<
+    "canvas" | "mesh" | "fullscreen"
+  >(
+    (initialPreset.mode === "component" ? "canvas" : initialPreset.mode) ||
+      "canvas"
   );
   const [uniforms, setUniforms] = useState<Record<string, ShaderUniform>>({});
   const [uniformValues, setUniformValues] = useState<Record<string, any>>({});
   const [isPlaying, setIsPlaying] = useState(true);
-  const [showControls, setShowControls] = useState(true);
   const [fps, setFps] = useState(60);
   const [compileError, setCompileError] = useState<string | null>(null);
+  const [currentPresetName, setCurrentPresetName] = useState(
+    initialPreset.name
+  );
 
-  const canvasRef = useRef<any>(null);
+  // Panel states
+  const [isControlPanelOpen, setIsControlPanelOpen] = useState(true);
+  const [isCodePanelOpen, setIsCodePanelOpen] = useState(false);
+
+  // Recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingFormat, setRecordingFormat] = useState<
+    "mp4" | "webm" | "gif"
+  >("webm");
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const gifRef = useRef<any>(null);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const canvasRef = useRef<ShaderCanvasRef>(null);
 
   useEffect(() => {
     setShaderCode(initialPreset.code);
     setVertexShaderCode(initialPreset.vertexShader);
-    setRenderMode(initialPreset.mode || "canvas");
+    setRenderMode(
+      (initialPreset.mode === "component" ? "canvas" : initialPreset.mode) ||
+        "canvas"
+    );
+    setCurrentPresetName(initialPreset.name);
   }, [initialPreset]);
 
   useEffect(() => {
@@ -69,7 +101,7 @@ export function ShaderEditor() {
   const handleRandomize = () => {
     const newValues: Record<string, any> = {};
     Object.entries(uniforms).forEach(([name, uniform]) => {
-      // Skip texture uniforms - don't randomize images
+      // Skip texture uniforms
       if (uniform.type === "sampler2D") {
         return;
       }
@@ -87,21 +119,169 @@ export function ShaderEditor() {
     setUniformValues((prev) => ({ ...prev, ...newValues }));
   };
 
-  const handleScreenshot = () => {
-    if (canvasRef.current) {
-      const dataUrl = canvasRef.current.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = "shader-output.png";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  const handleApplyPreset = (presetValues: Record<string, any>) => {
+    setUniformValues((prev) => ({ ...prev, ...presetValues }));
+  };
+
+  // Export image with scale
+  const handleExportImage = useCallback(
+    (scale: number) => {
+      if (canvasRef.current?.canvas) {
+        const canvas = canvasRef.current.canvas;
+
+        // Create a new canvas with the scaled dimensions
+        const exportCanvas = document.createElement("canvas");
+        const ctx = exportCanvas.getContext("2d");
+        if (!ctx) return;
+
+        exportCanvas.width = canvas.width * scale;
+        exportCanvas.height = canvas.height * scale;
+
+        // Draw the original canvas scaled
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(canvas, 0, 0, exportCanvas.width, exportCanvas.height);
+
+        // Download
+        const link = document.createElement("a");
+        link.download = `${currentPresetName
+          .replace(/\s+/g, "-")
+          .toLowerCase()}-${scale}x.png`;
+        link.href = exportCanvas.toDataURL("image/png");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    },
+    [currentPresetName]
+  );
+
+  // Start recording
+  const handleStartRecording = useCallback(
+    async (format: "mp4" | "webm" | "gif") => {
+      if (!canvasRef.current?.canvas) return;
+
+      const canvas = canvasRef.current.canvas;
+      setRecordingFormat(format);
+      setIsRecording(true);
+      recordedChunksRef.current = [];
+
+      if (format === "gif") {
+        // Load GIF.js if not already loaded
+        if (!window.GIF) {
+          const script = document.createElement("script");
+          script.src =
+            "https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js";
+          script.onload = () => startGifRecording(canvas);
+          document.head.appendChild(script);
+        } else {
+          startGifRecording(canvas);
+        }
+      } else {
+        // WebM or MP4 recording using MediaRecorder
+        const stream = canvas.captureStream(30);
+        const mimeType = format === "mp4" ? "video/mp4" : "video/webm";
+
+        // Check for codec support
+        let options: MediaRecorderOptions = { mimeType };
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          options = { mimeType: "video/webm" };
+        }
+
+        const mediaRecorder = new MediaRecorder(stream, options);
+        mediaRecorderRef.current = mediaRecorder;
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            recordedChunksRef.current.push(e.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunksRef.current, {
+            type: options.mimeType,
+          });
+          downloadBlob(blob, format);
+        };
+
+        mediaRecorder.start(100);
+      }
+    },
+    [currentPresetName]
+  );
+
+  const startGifRecording = (canvas: HTMLCanvasElement) => {
+    if (!window.GIF) return;
+
+    gifRef.current = new window.GIF({
+      workers: 2,
+      quality: 10,
+      width: canvas.width,
+      height: canvas.height,
+      workerScript:
+        "https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js",
+    });
+
+    gifRef.current.on("finished", (blob: Blob) => {
+      downloadBlob(blob, "gif");
+      setIsRecording(false);
+    });
+
+    // Capture frames
+    recordingIntervalRef.current = setInterval(() => {
+      if (gifRef.current && canvasRef.current?.canvas) {
+        gifRef.current.addFrame(canvasRef.current.canvas, {
+          delay: 33,
+          copy: true,
+        });
+      }
+    }, 33); // ~30fps
+  };
+
+  // Stop recording
+  const handleStopRecording = useCallback(() => {
+    if (recordingFormat === "gif") {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+      if (gifRef.current) {
+        gifRef.current.render();
+      }
+    } else {
+      if (mediaRecorderRef.current) {
+        mediaRecorderRef.current.stop();
+      }
+      setIsRecording(false);
     }
+  }, [recordingFormat]);
+
+  const downloadBlob = (blob: Blob, format: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.download = `${currentPresetName
+      .replace(/\s+/g, "-")
+      .toLowerCase()}-recording.${format}`;
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="h-screen w-full relative bg-slate-100 overflow-hidden dark p-2">
-      <div className="w-full h-full rounded-4xl overflow-hidden">
+    <div className="h-screen w-full relative bg-background overflow-hidden">
+      {/* Back Button near sidebar toggles */}
+      <button
+        onClick={() => router.push("/")}
+        className="fixed top-4 right-20 z-50 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-md border border-border shadow-lg hover:bg-card transition-colors flex items-center gap-2"
+        title="Back to Gallery"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        <span className="text-sm font-medium">Back</span>
+      </button>
+
+      {/* Shader Canvas */}
+      <div className="w-full h-full">
         {renderMode === "mesh" ? (
           <R3FCanvas
             ref={canvasRef}
@@ -131,8 +311,9 @@ export function ShaderEditor() {
         )}
       </div>
 
+      {/* Compile Error */}
       {compileError && (
-        <div className="absolute bottom-4 left-4 right-4 z-50 bg-red-500/80 text-white p-4 rounded-lg backdrop-blur-md border border-red-400 font-mono text-sm whitespace-pre-wrap">
+        <div className="absolute bottom-4 left-4 right-4 z-50 bg-destructive/90 text-destructive-foreground p-4 rounded-xl backdrop-blur-md border border-destructive font-mono text-sm whitespace-pre-wrap">
           <strong>Shader Error:</strong>
           <div className="mt-2 max-h-40 overflow-y-auto">{compileError}</div>
           <button
@@ -144,30 +325,45 @@ export function ShaderEditor() {
         </div>
       )}
 
-      {showControls && (
-        <FloatingControls
-          uniforms={uniforms}
-          values={uniformValues}
-          onChange={handleUniformChange}
-          onClose={() => setShowControls(false)}
-          isPlaying={isPlaying}
-          onPlayPause={() => setIsPlaying(!isPlaying)}
-          onReset={handleReset}
-          onRandomize={handleRandomize}
-          onShowPresets={() => router.push("/")}
-          onScreenshot={handleScreenshot}
-          fps={fps}
-        />
+      {/* Recording Indicator */}
+      {isRecording && (
+        <div className="fixed top-4 right-4 z-[60] flex items-center gap-2 px-3 py-2 rounded-xl bg-destructive text-destructive-foreground">
+          <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+          <span className="text-sm font-medium">Recording...</span>
+        </div>
       )}
 
-      {!showControls && (
-        <button
-          onClick={() => setShowControls(true)}
-          className="absolute top-4 right-4 bg-card/80 backdrop-blur-md border border-border rounded-lg px-4 py-2 text-sm font-medium hover:bg-card transition-colors"
-        >
-          Show Controls
-        </button>
-      )}
+      {/* Code Panel (Left) */}
+      <CodePanel
+        isOpen={isCodePanelOpen}
+        onToggle={() => setIsCodePanelOpen(!isCodePanelOpen)}
+        shaderCode={shaderCode}
+        shaderName={currentPresetName}
+        uniformValues={uniformValues}
+        renderMode={renderMode}
+      />
+
+      {/* Control Panel (Right) */}
+      <ControlPanel
+        isOpen={isControlPanelOpen}
+        onToggle={() => setIsControlPanelOpen(!isControlPanelOpen)}
+        uniforms={uniforms}
+        values={uniformValues}
+        onChange={handleUniformChange}
+        onApplyPreset={handleApplyPreset}
+        onBack={() => router.push("/")}
+        panelOpacity={0.8}
+        isPlaying={isPlaying}
+        onPlayPause={() => setIsPlaying(!isPlaying)}
+        onReset={handleReset}
+        onRandomize={handleRandomize}
+        onExportImage={handleExportImage}
+        onStartRecording={handleStartRecording}
+        onStopRecording={handleStopRecording}
+        isRecording={isRecording}
+        fps={fps}
+        shaderName={currentPresetName}
+      />
     </div>
   );
 }

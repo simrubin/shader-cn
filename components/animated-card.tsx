@@ -41,8 +41,8 @@ export function AnimatedCard({
   isBookmarked = false,
   onBookmarkToggle,
 }: AnimatedCardProps) {
-  // Generate a stable random delay for this card instance (0 to 0.4 seconds)
-  const randomDelay = React.useMemo(() => Math.random() * 0.4, []);
+  // Generate a stable random delay for this card instance (0 to 0.08 seconds) - near instant stagger
+  const randomDelay = React.useMemo(() => Math.random() * 0.08, []);
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -66,34 +66,31 @@ export function AnimatedCard({
         className="w-full h-full rounded-[40px] hover:scale-[1.02] transition-all duration-300 overflow-hidden group cursor-pointer relative shadow-xl hover:shadow-2xl"
         initial={{
           opacity: enableAnimation ? 0 : 1,
-          filter: "blur(4px)",
-          scale: enableAnimation ? 0.9 : 1,
+          scale: enableAnimation ? 0.6 : 1,
         }}
         whileInView={{
           opacity: 1,
-          filter: "blur(0px)",
           scale: 1,
         }}
         viewport={{
           once: true,
-          amount: 0.1,
-          margin: "0px 0px -50px 0px",
+          amount: 0.05,
         }}
         transition={{
-          duration: 0.1,
-          bounce: 0.2,
-          ease: "easeInOut",
+          duration: 0.15,
+          ease: [0.22, 1.2, 0.36, 1],
           delay: enableAnimation ? randomDelay : 0,
         }}
       >
-        {/* Image fills entire card */}
         {preset.image ? (
-          <img
-            src={preset.image}
-            alt={preset.name}
-            className="w-full h-full object-cover select-none pointer-events-none"
-            loading="lazy"
-          />
+          <>
+            <img
+              src={preset.image}
+              alt={preset.name}
+              className="w-full h-full object-cover select-none pointer-events-none"
+              loading="lazy"
+            />
+          </>
         ) : (
           <div className="w-full h-full bg-slate-800 flex items-center justify-center">
             <span className="text-slate-500 font-medium text-sm">

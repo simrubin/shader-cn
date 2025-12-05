@@ -23,7 +23,6 @@ export { mosaic } from "./mosaic";
 // Effects shaders
 export { chromaticWaves } from "./chromatic-waves";
 export { glitchEffect } from "./glitch-effect";
-export { matrixRain } from "./matrix-rain";
 export { sparkle } from "./sparkle";
 
 // Dithering shaders
@@ -54,7 +53,6 @@ import { mandala } from "./mandala";
 import { mosaic } from "./mosaic";
 import { chromaticWaves } from "./chromatic-waves";
 import { glitchEffect } from "./glitch-effect";
-import { matrixRain } from "./matrix-rain";
 import { sparkle } from "./sparkle";
 import { dithering } from "./dithering";
 import { imageDithering } from "./image-dithering";
@@ -82,7 +80,6 @@ export const allShaderPresets = [
   // Effects
   { ...chromaticWaves, image: "/shader-imgs/chromatic-waves.png" },
   { ...glitchEffect, image: "/shader-imgs/glitch-effect.png" },
-  { ...matrixRain, image: "/shader-imgs/matrix-rain.png" },
   { ...sparkle, image: "/shader-imgs/sparkle.png" },
 
   // Dithering

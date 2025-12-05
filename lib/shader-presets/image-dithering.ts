@@ -3,7 +3,7 @@ import { ShaderPreset } from "./types";
 export const imageDithering: ShaderPreset = {
   name: "Image Dithering",
   description: "Upload an image to apply dual-color Bayer dithering with configurable colors and pixel size",
-  category: "Effects",
+  category: "Filter",
   mode: "fullscreen",
   code: `uniform float u_time;
 uniform vec2 u_resolution;

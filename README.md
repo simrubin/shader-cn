@@ -1,30 +1,27 @@
-# Shader animation builder
+# Shader Animation Builder
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+A Next.js app for designing and previewing shader-based animations with an interactive editor.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/simeon-rubins-projects/v0-shader-animation-builder)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/qxbGqHUfp4n)
+- Live preview with adjustable uniforms and presets
+- Shader code editor with examples and gallery
+- Built on React, Three.js, and `@paper-design/shaders-react`
 
-## Overview
+## Live site
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+https://vercel.com/simeon-rubins-projects/v0-shader-animation-builder
 
-## Deployment
+## Getting started
 
-Your project is live at:
+1) Install dependencies: `pnpm install`
+2) Run the dev server: `pnpm dev`
+3) Build for production: `pnpm build`
 
-**[https://vercel.com/simeon-rubins-projects/v0-shader-animation-builder](https://vercel.com/simeon-rubins-projects/v0-shader-animation-builder)**
+## Conventions
 
-## Build your app
+- Next.js 16 with the app router
+- pnpm for package management
+- TypeScript, Tailwind CSS, and Radix UI components
 
-Continue building your app on:
+## Notes
 
-**[https://v0.app/chat/qxbGqHUfp4n](https://v0.app/chat/qxbGqHUfp4n)**
-
-## How It Works
-
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+The project originated from a v0.app prototype. Future edits here will deploy through Vercel.
